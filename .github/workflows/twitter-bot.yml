@@ -1,1 +1,55 @@
+name: Twitter Bot
 
+
+on:
+schedule:
+- cron: '0 * * * *'
+workflow_dispatch: {}
+
+
+permissions:
+contents: write
+
+
+jobs:
+run:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout bot repo
+uses: actions/checkout@v4
+with:
+fetch-depth: 0
+
+
+- name: Checkout source site repo
+uses: actions/checkout@v4
+with:
+repository: quasimatt/quasimatt.com
+path: source_site
+fetch-depth: 0
+
+
+- name: Set up Python
+uses: actions/setup-python@v5
+with:
+python-version: '3.11'
+
+
+- name: Install deps
+run: |
+python -m pip install --upgrade pip
+pip install -r bot/requirements.txt
+
+
+- name: Run bot
+env:
+DEFAULT_BRANCH: ${{ github.ref_name }}
+SITE_BASE: https://www.quasimatt.com
+POSTS_FILE: source_site/blog/index.html
+GIT_USER_NAME: quasi-bot
+GIT_USER_EMAIL: bot@quasimatt.com
+X_API_KEY: ${{ secrets.X_API_KEY }}
+X_API_SECRET: ${{ secrets.X_API_SECRET }}
+X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+run: python bot/twitter_bot.py
